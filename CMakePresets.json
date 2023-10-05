@@ -1,0 +1,94 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "multi",
+      "generator": "Ninja Multi-Config",
+      "hidden": true
+    },
+    {
+      "name": "gcc",
+      "displayName": "GCC",
+      "description": "Build with gcc (using ninja generator) [Unix]",
+      "inherits": "multi",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "g++",
+        "CMAKE_C_COMPILER": "gcc"
+      },
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "clang",
+      "displayName": "Clang",
+      "description": "Build with clang (using ninja generator) [Unix]",
+      "inherits": "multi",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_COMPILER": "clang"
+      }
+    },
+    {
+      "name": "clang-cl",
+      "displayName": "ClangCL",
+      "description": "Build with clang-cl (using ninja generator) [Windows]",
+      "inherits": "multi",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang-cl",
+        "CMAKE_C_COMPILER": "clang-cl"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "msvc",
+      "displayName": "MSVC",
+      "description": "Build with msvc (using ninja generator) [Windows]",
+      "inherits": "multi",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "cl",
+        "CMAKE_C_COMPILER": "cl"
+      },
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Release",
+      "configurePreset": "multi",
+      "configuration": "Release"
+    },
+    {
+      "name": "Debug",
+      "configurePreset": "multi",
+      "configuration": "Debug"
+    },
+    {
+      "name": "gcc",
+      "configurePreset": "gcc"
+    },
+    {
+      "name": "clang",
+      "configurePreset": "clang"
+    },
+    {
+      "name": "clang-cl",
+      "configurePreset": "clang-cl"
+    },
+    {
+      "name": "msvc",
+      "configurePreset": "msvc"
+    }
+  ]
+
+}
