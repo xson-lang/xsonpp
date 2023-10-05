@@ -4,7 +4,7 @@
 #include <cstdint>
 
 namespace xson {
-	enum class error_code {
+	enum class error_code : std::size_t {
 
 
 		num_codes

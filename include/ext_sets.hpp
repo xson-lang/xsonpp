@@ -1,16 +1,8 @@
 #pragma once
 #include <bitset>
+#include <cstdint>
 
-
-//This will most likely be moved to a different file in the near future
-namespace xson {
-	constexpr static std::size_t num_xles = 10 + 1;
-}
-
-
-namespace xson {
-	using ext_list = std::bitset<num_xles>;
-}
+#include "exts.hpp"
 
 
 namespace xson {
