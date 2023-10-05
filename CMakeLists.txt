@@ -16,7 +16,9 @@ option(BUILD_FOR_NATIVE_ARCH ${BUILD_FOR_NATIVE_ARCH_DESC} FALSE)
 
 option(HEADER_ONLY "Use XsonCpp as a header-only library, requiring no compilation" FALSE)
 
+
 if(${HEADER_ONLY})
+message(STATUS "Configuring XsonCpp as header only")
 add_library(${PROJECT_NAME} INTERFACE)
 
 target_compile_definitions(${PROJECT_NAME} INTERFACE XSON_CPP_HEADER_ONLY)
