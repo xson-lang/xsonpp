@@ -61,34 +61,6 @@
         "rhs": "Windows"
       }
     }
-  ],
-  "buildPresets": [
-    {
-      "name": "Release",
-      "configurePreset": "multi",
-      "configuration": "Release"
-    },
-    {
-      "name": "Debug",
-      "configurePreset": "multi",
-      "configuration": "Debug"
-    },
-    {
-      "name": "gcc",
-      "configurePreset": "gcc"
-    },
-    {
-      "name": "clang",
-      "configurePreset": "clang"
-    },
-    {
-      "name": "clang-cl",
-      "configurePreset": "clang-cl"
-    },
-    {
-      "name": "msvc",
-      "configurePreset": "msvc"
-    }
   ]
 
 }
