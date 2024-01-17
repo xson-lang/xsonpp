@@ -1,36 +1,93 @@
 #pragma once
-#include <array>
-#include <string_view>
 #include <cstdint>
+#include <filesystem>
 
-namespace xson {
-	enum class error_code : std::size_t {
-		none,
+#include <outcome/result.hpp>
+#include <outcome/config.hpp>
+
+#include "error.hpp"
+
+namespace xson { struct reader; }
+
+namespace xson::impl {
+	namespace outcome = OUTCOME_V2_NAMESPACE;
+
+	//Will probably switch to using terminate, but need to test with -fno-exceptions first
+	template<typename T>
+	using outcome_result_type = outcome::checked<T, xson::error::info>;
+}
 
 
+namespace xson::impl {
+	constexpr outcome::success_type<void> success() noexcept;
 
-		num_codes
-	};
+	template<typename T>
+	constexpr decltype(auto) success(T&& v, uint16_t spare_storage = 0);
+}
 
 
-	constexpr std::array<std::string_view, static_cast<std::size_t>(error_code::num_codes)> error_msgs = {
+namespace xson::impl {
+	template<typename T>
+	struct result_base : protected outcome_result_type<T> {
+		using outcome_result_type<T>::outcome_result_type;
 
+		
+		using outcome_result_type<T>::operator bool;
+		constexpr bool has_success() const noexcept;
+
+
+		using outcome_result_type<T>::error;
+		using outcome_result_type<T>::has_error;
+
+
+		constexpr error::code code() const noexcept;
+		std::string message() const;
+		constexpr const std::error_category& category() const noexcept;
+
+		std::filesystem::path path() const noexcept;
+		constexpr std::optional<std::size_t> line() const noexcept;
+		constexpr std::optional<std::size_t> column() const noexcept;
+
+		std::string location() const;
+		std::string full_message() const;
+
+	private:
+		friend struct ::xson::reader;
 	};
 }
 
 
 namespace xson {
-	struct result {
-		constexpr result() noexcept = default;
-		constexpr result(error_code code) noexcept;
+	template<typename T = void> 
+	struct [[nodiscard]] result : public impl::result_base<T> {
+		using impl::result_base<T>::result_base;
 
-		constexpr std::string_view desc() noexcept;
+		constexpr const T* operator->() const noexcept;
+		constexpr T* operator->() noexcept;
 
-		constexpr bool success() noexcept;
-		constexpr operator bool() noexcept;
+		constexpr const T& operator*() const& noexcept;
+		constexpr T& operator*() & noexcept;
 
-		error_code code = error_code::none;
+		constexpr const T&& operator*() const&& noexcept;
+		constexpr T&& operator*() && noexcept;
+		
+
+		template<typename U>
+		constexpr T value_or(U&& default_value) const&;
+
+		template<typename U>
+		constexpr T value_or(U&& default_value) &&;
+
+		using impl::result_base<T>::has_value;
+		using impl::result_base<T>::value;
+	};
+
+	template<>
+	struct [[nodiscard]] result<void> : public impl::result_base<void> {
+		using impl::result_base<void>::result_base;
 	};
 }
+
+
 
 #include "../src/result.inl"
