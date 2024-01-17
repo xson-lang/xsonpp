@@ -22,16 +22,6 @@
       }
     },
     {
-      "name": "clang",
-      "displayName": "Clang",
-      "description": "Build with clang (using ninja generator) [Unix]",
-      "inherits": "multi",
-      "cacheVariables": {
-        "CMAKE_CXX_COMPILER": "clang++",
-        "CMAKE_C_COMPILER": "clang"
-      }
-    },
-    {
       "name": "clang-cl",
       "displayName": "ClangCL",
       "description": "Build with clang-cl (using ninja generator) [Windows]",
@@ -42,6 +32,21 @@
       },
       "condition": {
         "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "clang",
+      "displayName": "Clang",
+      "description": "Build with clang (using ninja generator) [Unix]",
+      "inherits": "multi",
+      "cacheVariables": {
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_COMPILER": "clang"
+      },
+      "condition": {
+        "type": "notEquals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
       }
@@ -61,6 +66,157 @@
         "rhs": "Windows"
       }
     }
-  ]
+  ],
+  "buildPresets": [
+    {
+      "name": "clang-cl-shared",
+      "displayName": "ClangCL (Shared)",
+      "configurePreset": "clang-cl",
+      
+      "targets": "XsonCpp",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "clang-cl-static",
+      "displayName": "ClangCL (Static)",
+      "configurePreset": "clang-cl",
+      "targets": "XsonCpp_S",
+      
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "clang-cl-all",
+      "displayName": "ClangCL (All)",
+      "configurePreset": "clang-cl",
+      "targets": [ "XsonCpp", "XsonCpp_S" ],
+      
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
 
+
+    {
+      "name": "clang-shared",
+      "displayName": "Clang (Shared)",
+      "configurePreset": "clang",
+      "targets": "XsonCpp",
+      
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "clang-static",
+      "displayName": "Clang (Static)",
+      "configurePreset": "clang",
+      "targets": "XsonCpp_S",
+      
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "clang-all",
+      "displayName": "Clang (All)",
+      "configurePreset": "clang",
+      "targets": [ "XsonCpp", "XsonCpp_S" ],
+      
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+
+
+    {
+      "name": "gcc-shared",
+      "displayName": "GCC (Shared)",
+      "configurePreset": "gcc",
+      "targets": "XsonCpp",
+      
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "gcc-static",
+      "displayName": "GCC (Static)",
+      "configurePreset": "gcc",
+      "targets": "XsonCpp_S",
+      
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "gcc-all",
+      "displayName": "GCC (All)",
+      "configurePreset": "gcc",
+      "targets": [ "XsonCpp", "XsonCpp_S" ],
+      
+      "condition": {
+        "type": "notEquals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+
+
+    {
+      "name": "msvc-shared",
+      "displayName": "MSVC (Shared)",
+      "configurePreset": "msvc",
+      "targets": "XsonCpp",
+      
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "msvc-static",
+      "displayName": "MSVC (Static)",
+      "configurePreset": "msvc",
+      "targets": "XsonCpp_S",
+      
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "msvc-all",
+      "displayName": "MSVC (All)",
+      "configurePreset": "msvc",
+      "targets": [ "XsonCpp", "XsonCpp_S" ],
+      
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    }
+  ]
 }
