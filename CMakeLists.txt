@@ -5,6 +5,7 @@ project(XsonCpp VERSION 1.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 string(CONCAT BUILD_FOR_NATIVE_ARCH_DESC
     "Specifies if program should be built for the native cpu"
@@ -73,4 +74,5 @@ target_compile_definitions(${PROJECT_NAME} PUBLIC -DLLFIO_DYN_LINK)
 
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} BASE_NAME XSONCPP EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/include/export_defs.h")
+configure_file(${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_SOURCE_DIR}/build/compile_commands.json COPYONLY)
 
