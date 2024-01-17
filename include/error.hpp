@@ -4,12 +4,26 @@
 #include <filesystem>
 #include <optional>
 
+//required to build shared library: disable use of undefined function that checks filesytem abi
+#define LLFIO_DISABLE_INLINE_SIZEOF_FILESYSTEM_PATH_CHECK 1
+
+#ifdef XSON_CPP_ERROR_NO_PATH
+#define LLFIO_DISABLE_PATHS_IN_FAILURE_INFO true
+#define _CONSTEXPR_IF_NO_PATH constexpr
+#else
+#define _CONSTEXPR_IF_NO_PATH inline
+#endif
+#include <llfio/v2.0/status_code.hpp>
+
 
 #include "export_defs.h"
 #include "error_code.hpp"
 
 
 namespace xson::error {
+	namespace llfio = LLFIO_V2_NAMESPACE;
+	using llfio_err = llfio::error_info;
+
 	struct info {
 		//Same definition always
 		constexpr error::code code() const noexcept;
@@ -24,6 +38,7 @@ namespace xson::error {
 		//Different definition if error path is enabled
 		_CONSTEXPR_IF_NO_PATH info(); //non-trivial constructor, although a trivial one is possible
 		_CONSTEXPR_IF_NO_PATH info(error::code value);
+		inline info(llfio_err& llfio_error);
 		inline info(error::code value, std::filesystem::path file_path,
 			std::optional<std::size_t> file_line = std::nullopt,
 			std::optional<std::size_t> file_column = std::nullopt

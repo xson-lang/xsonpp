@@ -35,6 +35,11 @@ namespace xson::error {
 	info::info(error::code value) :
 		_code(value), _cat(&error::category()), _path(), _line(npos), _col(npos) {}
 
+	info::info(llfio_err& llfio_error) : 
+		_code(static_cast<error::code>(llfio_error.value())), 
+		_cat(&llfio::make_error_code(llfio_error).category()),
+		_path(llfio_error.path1()), _line(npos), _col(npos) {}
+
 	info::info(error::code value, std::filesystem::path file_path,
 		std::optional<std::size_t> file_line, std::optional<std::size_t> file_column
 	) :
@@ -90,6 +95,9 @@ namespace xson::error {
 
 	constexpr info::info(error::code value) :
 		_code(value), _cat(&error::category()) {}
+
+	info::info(llfio_err& llfio_error) :
+		_code(static_cast<error::code>(llfio_error.value())), _cat(&llfio::make_error_code(llfio_error).category()) {}
 
 	info::info(error::code value, std::filesystem::path, std::optional<std::size_t>, std::optional<std::size_t>) : 
 		info(value) {}

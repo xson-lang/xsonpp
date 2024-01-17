@@ -68,12 +68,7 @@ get_target_property(COMPILER_FLAGS ${PROJECT_NAME} COMPILE_OPTIONS)
 message(STATUS "Compiler options: ${COMPILER_FLAGS}")
 endif()
 
-cmake_path(SET INCLUDE_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}\\include")
-file(TO_NATIVE_PATH "${INCLUDE_CMAKE_DIR}" INCLUDE_DIR)
-if(${HEADER_ONLY})
-target_include_directories(${PROJECT_NAME} INTERFACE "${INCLUDE_DIR}")
-else()
-target_include_directories(${PROJECT_NAME} PUBLIC "${INCLUDE_DIR}")
-endif()
-message(STATUS "Including local directory: ${INCLUDE_DIR}")
+target_compile_definitions(${PROJECT_NAME} PUBLIC -DLLFIO_HEADERS_ONLY=0)
+target_compile_definitions(${PROJECT_NAME} PUBLIC -DLLFIO_DYN_LINK)
+
 
