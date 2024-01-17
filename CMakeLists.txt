@@ -71,4 +71,6 @@ endif()
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DLLFIO_HEADERS_ONLY=0)
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DLLFIO_DYN_LINK)
 
+include(GenerateExportHeader)
+generate_export_header(${PROJECT_NAME} BASE_NAME XSONCPP EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/include/export_defs.h")
 
