@@ -97,7 +97,7 @@ target_compile_definitions(${PROJECT_NAME_STATIC} PUBLIC -DLLFIO_HEADERS_ONLY=0)
 target_compile_definitions(${PROJECT_NAME_STATIC} PUBLIC -DLLFIO_STATIC_LINK)
 
 include(GenerateExportHeader)
-generate_export_header(${PROJECT_NAME} BASE_NAME XSONCPP EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/include/export_defs.h")
+generate_export_header(${PROJECT_NAME} BASE_NAME XSONCPP EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/include/XsonCpp/export_defs.h")
 target_compile_definitions(${PROJECT_NAME_STATIC} PUBLIC -DXSONCPP_STATIC_DEFINE)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC llfio_dl)

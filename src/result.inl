@@ -1,5 +1,5 @@
 #pragma once
-#include "result.hpp"
+#include "XsonCpp/result/result.hpp"
 
 
 namespace xson::impl {
