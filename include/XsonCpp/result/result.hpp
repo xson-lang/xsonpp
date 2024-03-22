@@ -7,7 +7,7 @@
 
 #include "error.hpp"
 
-namespace xson { struct reader; }
+namespace xson { struct parser; }
 
 namespace xson::impl {
 	namespace outcome = OUTCOME_V2_NAMESPACE;
@@ -52,7 +52,7 @@ namespace xson::impl {
 		std::string full_message() const;
 
 	private:
-		friend struct ::xson::reader;
+		friend struct ::xson::parser;
 	};
 }
 

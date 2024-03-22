@@ -29,6 +29,7 @@ namespace xson::error {
 		unmatched_opening_square_brackets,
 		comment_missing_ending,
 		unrecognized_directive,
+		content_before_directive,
 		empty_directive,
 		empty_directive_args,
 		missing_directive_item,
@@ -39,10 +40,9 @@ namespace xson::error {
 		invalid_ext_id,
 		invalid_ext_range,
 
-
-		unknown,
 		num_codes,
 
+		unknown = none,
 		posix_range_start = operation_not_permitted,
 		posix_range_end = permission_denied,
 	};
@@ -68,6 +68,7 @@ namespace xson::error {
 		"Missing closing square bracket for unmatched \'[\' character!",
 		"Missing multi-line comment ending (\'*/\')!",
 		"Unrecognized directive!",
+		"Directive not at top of file! There must not be any key/value pairs before directives."
 		"Empty directive! An unescaped \'#\' character by itself is not allowed: it must contain a directive.",
 		"Missing directive arguments! Directive must have a non-empty list!",
 		"Missing directive item before comma separator (\',\')! You cannot have a directive list with an empty item!",

@@ -1,18 +1,12 @@
 #pragma once
 #include <array>
+#include <llfio/v2.0/path_view.hpp>
 #include <system_error>
 #include <filesystem>
 #include <optional>
 
 //required to build shared library: disable use of undefined function that checks filesytem abi
 #define LLFIO_DISABLE_INLINE_SIZEOF_FILESYSTEM_PATH_CHECK 1
-
-#ifdef XSON_CPP_ERROR_NO_PATH
-#define LLFIO_DISABLE_PATHS_IN_FAILURE_INFO true
-#define _CONSTEXPR_IF_NO_PATH constexpr
-#else
-#define _CONSTEXPR_IF_NO_PATH inline
-#endif
 #include <llfio/v2.0/status_code.hpp>
 
 
@@ -36,15 +30,15 @@ namespace xson::error {
 		
 
 		//Different definition if error path is enabled
-		_CONSTEXPR_IF_NO_PATH info(); //non-trivial constructor, although a trivial one is possible
-		_CONSTEXPR_IF_NO_PATH info(error::code value);
+		inline info(); //non-trivial constructor, although a trivial one is possible
 		inline info(llfio_err& llfio_error);
-		inline info(error::code value, std::filesystem::path file_path,
+		inline info(error::code value, 
+			llfio::path_view file_path = {},
 			std::optional<std::size_t> file_line = std::nullopt,
 			std::optional<std::size_t> file_column = std::nullopt
 		);
 
-		inline std::filesystem::path path() const noexcept;
+		constexpr llfio::path_view path() const noexcept;
 		constexpr std::optional<std::size_t> line() const noexcept;
 		constexpr std::optional<std::size_t> column() const noexcept;
 
@@ -56,18 +50,14 @@ namespace xson::error {
 
 		error::code _code;
 		const std::error_category* _cat; //info class can be trivially constructed, although that would cause this to be an uninitialized pointer 
-		#ifndef XSON_CPP_ERROR_NO_PATH
-		std::filesystem::path _path;
+		llfio::path_view _path;
 		std::size_t _line, _col;
-		#endif
 	};
 }
 
-#undef _CONSTEXPR_IF_NO_PATH
 
 
-
-namespace xson::error::impl {
+namespace xson::error {
 	struct category : public std::error_category {
 		virtual inline const char* name() const noexcept override final;
 		virtual inline std::string message(int c) const override final;
@@ -77,7 +67,7 @@ namespace xson::error::impl {
 
 
 namespace xson::error {
-	XSONCPP_EXPORT const impl::category& category() noexcept;
+	inline const category& xson_category() noexcept;
 
 	inline std::error_code make_error_code(error::code e);
 	inline std::error_code make_error_code(error::info e);
@@ -92,5 +82,5 @@ namespace std {
 #include "../src/error.inl"
 
 #ifdef XSON_CPP_HEADER_ONLY
-#include "../src/error.ipp"
+#include "../../../src/error.ipp"
 #endif

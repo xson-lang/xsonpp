@@ -27,17 +27,25 @@ target_compile_definitions(${PROJECT_NAME_HEADER_ONLY} INTERFACE $<$<CONFIG:DEBU
 
 #static and shared
 set(CPP_FILES
-    src/error.cpp
+    src/parser.cpp
+    src/reader.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED ${CPP_FILES})
 add_library(${PROJECT_NAME_STATIC} STATIC ${CPP_FILES})
+
+
+
 set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "")
 set_target_properties(${PROJECT_NAME_STATIC} PROPERTIES COMPILE_FLAGS "")
-
-
 target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:_DEBUG>)
 target_compile_definitions(${PROJECT_NAME_STATIC} PRIVATE $<$<CONFIG:DEBUG>:_DEBUG>)
+
+#target_sources(${PROJECT_NAME} INTERFACE FILE_SET includes TYPE HEADERS BASE_DIRS include/ FILES ...)
+#target_sources(${PROJECT_NAME_STATIC} INTERFACE FILE_SET includes TYPE HEADERS BASE_DIRS include/ FILES ...)
+#target_sources(${PROJECT_NAME_HEADER_ONLY} INTERFACE FILE_SET includes TYPE HEADERS BASE_DIRS include/ FILES ...)
+
+
 
 
 list(APPEND CLANG_ARGS "-Wall" "-Wextra")
@@ -48,7 +56,7 @@ else()
     list(APPEND CLANG_ARGS "-mtune=generic")
 endif()
 
-foreach(PROJECT IN ITEMS ${PROJECT_NAME} ${RPOJECT_NAME_STATIC})
+foreach(PROJECT IN ITEMS ${PROJECT_NAME} ${PROJECT_NAME_STATIC})
 #cl (msvc)
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") 
     target_compile_options(${PROJECT_NAME} PRIVATE "/W4" "$<$<CONFIG:RELEASE>:/O2>" "$<$<CONFIG:DEBUG>:/EHa>" "$<$<CONFIG:RELEASE>:/EHsc>")
@@ -65,7 +73,7 @@ else()
     target_compile_options(${PROJECT_NAME} PRIVATE ${CLANG_ARGS})
     target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:-Werror>" "$<$<CONFIG:RELEASE>:-Ofast>")
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang") #clang only
-        target_compile_options(${PROJECT_NAME} PRIVATE "-stdlib=libc++" "-Wno-c++98-compat-pedantic" "-Wc++17-compat-pedantic")
+        target_compile_options(${PROJECT_NAME} PRIVATE "-Wno-c++98-compat-pedantic" "-Wc++17-compat-pedantic")
 	else() #gcc only
         target_compile_options(${PROJECT_NAME} PRIVATE "-Wc++17-compat")
     endif()
@@ -104,4 +112,8 @@ target_link_libraries(${PROJECT_NAME} PUBLIC llfio_dl)
 target_link_libraries(${PROJECT_NAME_STATIC} PUBLIC llfio_sl)
 
 configure_file(${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_SOURCE_DIR}/build/compile_commands.json COPYONLY)
+
+install(TARGETS ${PROJECT_NAME})
+install(DIRECTORY include/ DESTINATION include)
+install(DIRECTORY src/ DESTINATION src)
 

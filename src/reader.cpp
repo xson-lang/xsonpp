@@ -1,3 +1,3 @@
 #ifndef XSON_CPP_HEADER_ONLY
-#include "error.ipp"
+#include "reader.ipp"
 #endif // !XSON_CPP_HEADER_ONLY

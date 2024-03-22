@@ -2,6 +2,7 @@
 #include "XsonCpp/result/error.hpp"
 
 #include <future>
+#include <llfio/v2.0/path_view.hpp>
 
 
 namespace xson::error {
@@ -16,39 +17,35 @@ namespace xson::error {
 
 	constexpr const std::error_category& info::category() const noexcept {
 		if (_cat) return *_cat;
-		return xson::error::category();
+		return xson::error::xson_category();
 	}
 
 
 	inline std::string info::message() const {
 		if (_cat) return _cat->message(_code);
-		return xson::error::category().message(_code);
+		return xson::error::xson_category().message(_code);
 	}
 }
 
 
-#ifndef XSON_CPP_ERROR_NO_PATH
 namespace xson::error {
 	info::info() :
-		info(error::none) {}
-
-	info::info(error::code value) :
-		_code(value), _cat(&error::category()), _path(), _line(npos), _col(npos) {}
+		info(error::unknown) {}
 
 	info::info(llfio_err& llfio_error) : 
 		_code(static_cast<error::code>(llfio_error.value())), 
 		_cat(&llfio::make_error_code(llfio_error).category()),
 		_path(llfio_error.path1()), _line(npos), _col(npos) {}
 
-	info::info(error::code value, std::filesystem::path file_path,
+	info::info(error::code value, llfio::path_view file_path,
 		std::optional<std::size_t> file_line, std::optional<std::size_t> file_column
 	) :
-		_code(value), _cat(&error::category()), _path(file_path),
+		_code(value), _cat(&error::xson_category()), _path(file_path),
 		_line(file_line.value_or(npos)),
 		_col(file_column.value_or(npos)) {}
 
 
-	std::filesystem::path info::path() const noexcept {
+	constexpr llfio::path_view info::path() const noexcept {
 		return _path;
 	}
 
@@ -63,7 +60,8 @@ namespace xson::error {
 
 	std::string info::location() const {
 		//Maybe this can be optimized, but it may not be necessary to do so
-		std::string ret = _path.generic_string();
+		auto p = llfio::path_view::rendered_path<llfio::path_view_component::zero_terminated>(_path);
+		std::string ret{p.c_str(), p.size()};
 		if (ret.empty())
 			return "";
 		
@@ -88,47 +86,10 @@ namespace xson::error {
 		return ret.append(1, ':').append(1, ' ').append(msg);
 	}
 }
-#else
+
+
+
 namespace xson::error {
-	constexpr info::info() :
-		info(error::unknown) {}
-
-	constexpr info::info(error::code value) :
-		_code(value), _cat(&error::category()) {}
-
-	info::info(llfio_err& llfio_error) :
-		_code(static_cast<error::code>(llfio_error.value())), _cat(&llfio::make_error_code(llfio_error).category()) {}
-
-	info::info(error::code value, std::filesystem::path, std::optional<std::size_t>, std::optional<std::size_t>) : 
-		info(value) {}
-
-
-	std::filesystem::path info::path() const noexcept {
-		return {};
-	}
-
-	constexpr std::optional<std::size_t> info::line() const noexcept {
-		return std::nullopt;
-	}
-
-	constexpr std::optional<std::size_t> info::column() const noexcept {
-		return std::nullopt;
-	}
-
-
-	std::string info::location() const {
-		return {};
-	}
-
-	std::string info::full_message() const {
-		return message();
-	}
-}
-#endif
-
-
-
-namespace xson::error::impl {
 	const char* category::name() const noexcept {
 		return "XSON Error";
 	}
@@ -153,8 +114,12 @@ namespace xson::error::impl {
 }
 
 
-
 namespace xson::error {
+	const category& xson_category() noexcept {
+		static category c;
+		return c;
+	}
+
 	std::error_code make_error_code(error::code e)  {
 		return { static_cast<int>(e), category() };
 	}
