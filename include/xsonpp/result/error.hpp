@@ -81,6 +81,6 @@ namespace std {
 
 #include "../src/error.inl"
 
-#ifdef XSON_CPP_HEADER_ONLY
+#ifdef XSONPP_HEADER_ONLY
 #include "../../../src/error.ipp"
 #endif

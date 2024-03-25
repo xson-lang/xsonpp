@@ -8,16 +8,16 @@
 #include "../result/result.hpp"
 
 #define COMMA ,
-#define XSON_CPP_SEGMENTS_NON_CONTENT \
+#define XSONPP_SEGMENTS_NON_CONTENT \
 X(directive,         result<std::pair<ext_list COMMA std::size_t>>, '#') \
 X(comment,           std::size_t     , '/') \
 X(comment_multiline, std::size_t     , '*') \
 
-#define XSON_CPP_SEGMENTS_CONTENT \
+#define XSONPP_SEGMENTS_CONTENT \
 X(object, result<struct object>, '{', '}') \
 X(array,  result<list>,          '[', ']') \
 
-#define XSON_CPP_SEGMENTS XSON_CPP_SEGMENTS_NON_CONTENT XSON_CPP_SEGMENTS_CONTENT
+#define XSONPP_SEGMENTS XSONPP_SEGMENTS_NON_CONTENT XSONPP_SEGMENTS_CONTENT
 
 
 namespace xson {
@@ -25,7 +25,7 @@ namespace xson {
         enum category : std::uint_fast8_t {
             none = false,
             #define X(name, ...) name,
-			XSON_CPP_SEGMENTS
+			XSONPP_SEGMENTS
             #undef X
 		};
 	    
@@ -39,11 +39,11 @@ namespace xson {
         #define X(name, _, open, close) \
         template<> struct opening_delim<name> : std::integral_constant<value_type, open> {}; \
         template<> struct closing_delim<name> : std::integral_constant<value_type, close> {};
-        XSON_CPP_SEGMENTS_CONTENT
+        XSONPP_SEGMENTS_CONTENT
         #undef X
         #define X(name, _, dlim) \
         template<> struct delim<name> : std::integral_constant<value_type, dlim> {};
-        XSON_CPP_SEGMENTS_NON_CONTENT
+        XSONPP_SEGMENTS_NON_CONTENT
         #undef X
 
         template<category S> constexpr static value_type opening_delim_v = opening_delim<S>::value;
@@ -55,7 +55,7 @@ namespace xson {
 
         #define X(name, ty, ...) \
         template<> struct result_type<name> { using type = ty; }; 
-        XSON_CPP_SEGMENTS
+        XSONPP_SEGMENTS
         #undef X
 
 	    template<category S> using result_type_t = typename result_type<S>::type;

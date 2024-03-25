@@ -11,7 +11,7 @@ namespace xson {
 	namespace llfio = LLFIO_V2_NAMESPACE;
 
 
-	struct XSONCPP_EXPORT reader {
+	struct XSONPP_EXPORT reader {
 		constexpr reader() noexcept = default;
 		//Destructor calls input file handle destructor, which closes the handle
 
@@ -27,6 +27,6 @@ namespace xson {
 	};
 }
 
-#ifdef XSON_CPP_HEADER_ONLY
+#ifdef XSONPP_HEADER_ONLY
 #include "../../../src/reader.ipp"
 #endif

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-project(XsonCpp VERSION 1.0 LANGUAGES CXX)
+project(xsonpp VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -21,7 +21,7 @@ option(BUILD_FOR_NATIVE_ARCH ${BUILD_FOR_NATIVE_ARCH_DESC} OFF)
 #header only
 add_library(${PROJECT_NAME_HEADER_ONLY} INTERFACE)
 
-target_compile_definitions(${PROJECT_NAME_HEADER_ONLY} INTERFACE XSON_CPP_HEADER_ONLY)
+target_compile_definitions(${PROJECT_NAME_HEADER_ONLY} INTERFACE XSONPP_HEADER_ONLY)
 target_compile_definitions(${PROJECT_NAME_HEADER_ONLY} INTERFACE $<$<CONFIG:DEBUG>:_DEBUG>)
 
 
@@ -105,13 +105,13 @@ target_compile_definitions(${PROJECT_NAME_STATIC} PUBLIC -DLLFIO_HEADERS_ONLY=0)
 target_compile_definitions(${PROJECT_NAME_STATIC} PUBLIC -DLLFIO_STATIC_LINK)
 
 include(GenerateExportHeader)
-generate_export_header(${PROJECT_NAME} BASE_NAME XSONCPP EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/include/XsonCpp/export_defs.h")
-target_compile_definitions(${PROJECT_NAME_STATIC} PUBLIC -DXSONCPP_STATIC_DEFINE)
+generate_export_header(${PROJECT_NAME} BASE_NAME XSONPP EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/include/xsonpp/export_defs.h")
+target_compile_definitions(${PROJECT_NAME_STATIC} PUBLIC -DXSONPP_STATIC_DEFINE)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC llfio_dl)
 target_link_libraries(${PROJECT_NAME_STATIC} PUBLIC llfio_sl)
 
-configure_file(${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_SOURCE_DIR}/build/compile_commands.json COPYONLY)
+#configure_file(${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_SOURCE_DIR}/build/compile_commands.json COPYONLY)
 
 install(TARGETS ${PROJECT_NAME})
 install(DIRECTORY include/ DESTINATION include)

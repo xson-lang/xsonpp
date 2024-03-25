@@ -19,20 +19,20 @@ namespace xson {
 }
 
 
-#define XSONCPP_BASE_EXT_SETS \
+#define XSONPP_BASE_EXT_SETS \
 X(ini,  2, 6, 8, 9) \
 X(json, 3, 5, 6, 7) \
 X(toml, 2, 3, 6, 8) \
 
-#define XSONCPP_EXT_SETS 
+#define XSONPP_EXT_SETS 
 
 namespace xson {
 	namespace ext_set {
 		#define X(name, ...) \
 		constexpr ext_list name = impl::ext_set<__VA_ARGS__>;
 
-		XSONCPP_BASE_EXT_SETS
-		XSONCPP_EXT_SETS
+		XSONPP_BASE_EXT_SETS
+		XSONPP_EXT_SETS
 		#undef X
 
 		/*constexpr ext_list ini  = impl::ext_set<2, 6, 8, 9>;
@@ -47,14 +47,14 @@ namespace xson {
 			#define X(name, ...) \
 			{#name, name}, {#name "-1.0", name},
 
-			XSONCPP_BASE_EXT_SETS
+			XSONPP_BASE_EXT_SETS
 			#undef X
 
 
 			#define X(name, ...) \
 			{#name, name},
 
-			XSONCPP_EXT_SETS
+			XSONPP_EXT_SETS
 			#undef X
 		};
 	}

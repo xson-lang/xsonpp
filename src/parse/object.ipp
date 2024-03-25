@@ -1,12 +1,12 @@
 #pragma once
-#include "XsonCpp/io/parser.hpp"
+#include "xsonpp/io/parser.hpp"
 #include <cstddef>
 #include <cstring>
 #include <string_view>
 
-#include "XsonCpp/result/error_code.hpp"
-#include "XsonCpp/xson/segment.hpp"
-#include "XsonCpp/xson/value/object.hpp"
+#include "xsonpp/result/error_code.hpp"
+#include "xsonpp/xson/segment.hpp"
+#include "xsonpp/xson/value/object.hpp"
 
 #define VERIFY_RESULT(fn) \
 if (auto r = fn; r.has_error()) \

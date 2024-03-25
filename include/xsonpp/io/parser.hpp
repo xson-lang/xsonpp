@@ -43,7 +43,7 @@ namespace xson {
 	result<std::pair<ext_list, std::size_t>> parser::parse<segment::directive>(const parser::char_type* const char_ptr, std::size_t length) noexcept;
 }
 
-#ifdef XSON_CPP_HEADER_ONLY
+#ifdef XSONPP_HEADER_ONLY
 #define _INLINE_HEADER_ONLY inline
 #include "../../../src/parser.ipp"
 #else

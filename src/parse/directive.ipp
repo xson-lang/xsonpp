@@ -1,7 +1,7 @@
 #pragma once
 #include "../parser.ipp"
 
-#include "XsonCpp/xson/directives.hpp"
+#include "xsonpp/xson/directives.hpp"
 #include <string_view>
 
 namespace xson {
