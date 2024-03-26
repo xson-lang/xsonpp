@@ -1,118 +1,95 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(xsonpp VERSION 1.0 LANGUAGES CXX)
-
 set(CMAKE_CXX_STANDARD 17)
 
 
-set(PROJECT_NAME_HEADER_ONLY "${PROJECT_NAME}_HO")
-set(PROJECT_NAME_STATIC      "${PROJECT_NAME}_S")
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-string(CONCAT BUILD_FOR_NATIVE_ARCH_DESC
-    "Specifies if program should be built for the native cpu"
-    "(i.e. it's exact capabilities) of the system the program being built on."
-    "DO NOT enable this if you plan to distribute the resulting library binary."
-)
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
-option(BUILD_FOR_NATIVE_ARCH ${BUILD_FOR_NATIVE_ARCH_DESC} OFF)
-
-
-#header only
-add_library(${PROJECT_NAME_HEADER_ONLY} INTERFACE)
-
-target_compile_definitions(${PROJECT_NAME_HEADER_ONLY} INTERFACE XSONPP_HEADER_ONLY)
-target_compile_definitions(${PROJECT_NAME_HEADER_ONLY} INTERFACE $<$<CONFIG:DEBUG>:_DEBUG>)
-
-
-#static and shared
-set(CPP_FILES
-    src/parser.cpp
-    src/reader.cpp
-)
-
-add_library(${PROJECT_NAME} SHARED ${CPP_FILES})
-add_library(${PROJECT_NAME_STATIC} STATIC ${CPP_FILES})
+### check build shared override ###
+if(DEFINED BUILD_SHARED_XSONPP)
+    set(BUILD_SHARED_LIBS "${BUILD_SHARED_XSONPP}")
+endif()
 
 
 
-set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "")
-set_target_properties(${PROJECT_NAME_STATIC} PROPERTIES COMPILE_FLAGS "")
-target_compile_definitions(${PROJECT_NAME} PRIVATE $<$<CONFIG:DEBUG>:_DEBUG>)
-target_compile_definitions(${PROJECT_NAME_STATIC} PRIVATE $<$<CONFIG:DEBUG>:_DEBUG>)
+### define target ###
+if(DEFINED XSONPP_HEADER_ONLY)
+    ### header only
+    add_library(${PROJECT_NAME} INTERFACE)
 
-#target_sources(${PROJECT_NAME} INTERFACE FILE_SET includes TYPE HEADERS BASE_DIRS include/ FILES ...)
-#target_sources(${PROJECT_NAME_STATIC} INTERFACE FILE_SET includes TYPE HEADERS BASE_DIRS include/ FILES ...)
-#target_sources(${PROJECT_NAME_HEADER_ONLY} INTERFACE FILE_SET includes TYPE HEADERS BASE_DIRS include/ FILES ...)
-
-
-
-
-list(APPEND CLANG_ARGS "-Wall" "-Wextra")
-
-if(${BUILD_FOR_NATIVE_ARCH})
-    list(APPEND CLANG_ARGS "-march=native")
+    target_compile_definitions(${PROJECT_NAME} INTERFACE -DXSONPP_HEADER_ONLY=1)
+    target_compile_definitions(${PROJECT_NAME} INTERFACE -DLLFIO_HEADERS_ONLY=1)
+    target_compile_definitions(${PROJECT_NAME} INTERFACE -DLLFIO_EXPERIMENTAL_STATUS_CODE=1)
+        
+    target_compile_definitions(${PROJECT_NAME} INTERFACE -DXSONPP_STATIC_DEFINE)
 else()
-    list(APPEND CLANG_ARGS "-mtune=generic")
-endif()
+    ### static and shared
+    set(CPP_FILES
+        src/parser.cpp
+        src/reader.cpp
+    )
 
-foreach(PROJECT IN ITEMS ${PROJECT_NAME} ${PROJECT_NAME_STATIC})
-#cl (msvc)
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") 
-    target_compile_options(${PROJECT_NAME} PRIVATE "/W4" "$<$<CONFIG:RELEASE>:/O2>" "$<$<CONFIG:DEBUG>:/EHa>" "$<$<CONFIG:RELEASE>:/EHsc>")
+    add_library(${PROJECT_NAME} ${CPP_FILES})
 
-#clang-cl
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC") 
-    list(TRANSFORM CLANG_ARGS PREPEND "/clang:")
-    target_compile_options(${PROJECT_NAME} PRIVATE ${CLANG_ARGS})
-    target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:/clang:-Werror>" "$<$<CONFIG:RELEASE>:/clang:-Ofast>")
-    target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:DEBUG>:/EHa>" "$<$<CONFIG:RELEASE>:/EHsc>")
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DLLFIO_HEADERS_ONLY=0)
 
-#gcc & clang
-else() 
-    target_compile_options(${PROJECT_NAME} PRIVATE ${CLANG_ARGS})
-    target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:-Werror>" "$<$<CONFIG:RELEASE>:-Ofast>")
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang") #clang only
-        target_compile_options(${PROJECT_NAME} PRIVATE "-Wno-c++98-compat-pedantic" "-Wc++17-compat-pedantic")
-	else() #gcc only
-        target_compile_options(${PROJECT_NAME} PRIVATE "-Wc++17-compat")
+    if(BUILD_SHARED_LIBS)
+        target_link_libraries     (${PROJECT_NAME} PUBLIC llfio_dl)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DLLFIO_DYN_LINK)
+    else()
+        target_link_libraries     (${PROJECT_NAME} PUBLIC llfio_sl)
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DLLFIO_STATIC_LINK)
+        
+        target_compile_definitions(${PROJECT_NAME} PUBLIC -DXSONPP_STATIC_DEFINE)
     endif()
+    
+    
+    ## compiler args
+    list(APPEND CLANG_ARGS "-Wall" "-Wextra")
+    
+    # cl (msvc)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC") 
+        target_compile_options(${PROJECT_NAME} PRIVATE "/W4")
+    # gcc & clang
+    else() 
+        target_compile_options(${PROJECT_NAME} PRIVATE ${CLANG_ARGS})
+        target_compile_options(${PROJECT_NAME} PRIVATE "$<$<CONFIG:RELEASE>:-Werror>")
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang") # clang only
+            target_compile_options(${PROJECT_NAME} PRIVATE "-Wno-c++98-compat-pedantic" "-Wc++17-compat-pedantic" "-fsized-deallocation")
+        else() # gcc only
+            target_compile_options(${PROJECT_NAME} PRIVATE "-Wc++17-compat")
+        endif()
+    endif()
+    
+    get_target_property(COMPILER_FLAGS ${PROJECT_NAME} COMPILE_OPTIONS)
+    message(STATUS "Compiler options: ${COMPILER_FLAGS}")
+
 endif()
-endforeach()
 
-get_target_property(COMPILER_FLAGS ${PROJECT_NAME} COMPILE_OPTIONS)
-message(STATUS "Compiler options: ${COMPILER_FLAGS}")
 
+
+### include directory ###
 cmake_path(SET SELF_INC_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 file(TO_NATIVE_PATH "${SELF_INC_CMAKE_DIR}" SELF_INC_DIR)
-target_include_directories(${PROJECT_NAME_HEADER_ONLY} INTERFACE "${SELF_INC_DIR}")
-target_include_directories(${PROJECT_NAME} PUBLIC "${SELF_INC_DIR}")
-target_include_directories(${PROJECT_NAME_STATIC} PUBLIC "${SELF_INC_DIR}")
+target_include_directories(${PROJECT_NAME} INTERFACE "${SELF_INC_DIR}")
 message(STATUS "Including self directory: ${SELF_INC_DIR}")
-    
-
-
-target_compile_definitions(${PROJECT_NAME_HEADER_ONLY} INTERFACE -DLLFIO_HEADERS_ONLY=1)
-target_compile_definitions(${PROJECT_NAME_HEADER_ONLY} INTERFACE -DLLFIO_EXPERIMENTAL_STATUS_CODE=1)
 
 
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC -DLLFIO_HEADERS_ONLY=0)
-target_compile_definitions(${PROJECT_NAME} PUBLIC -DLLFIO_DYN_LINK)
-
-
-target_compile_definitions(${PROJECT_NAME_STATIC} PUBLIC -DLLFIO_HEADERS_ONLY=0)
-target_compile_definitions(${PROJECT_NAME_STATIC} PUBLIC -DLLFIO_STATIC_LINK)
-
+### export header ###
 include(GenerateExportHeader)
 generate_export_header(${PROJECT_NAME} BASE_NAME XSONPP EXPORT_FILE_NAME "${CMAKE_CURRENT_SOURCE_DIR}/include/xsonpp/export_defs.h")
-target_compile_definitions(${PROJECT_NAME_STATIC} PUBLIC -DXSONPP_STATIC_DEFINE)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC llfio_dl)
-target_link_libraries(${PROJECT_NAME_STATIC} PUBLIC llfio_sl)
 
-#configure_file(${CMAKE_BINARY_DIR}/compile_commands.json ${CMAKE_SOURCE_DIR}/build/compile_commands.json COPYONLY)
 
+### clang compile commands ###
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+
+
+### install ###
 install(TARGETS ${PROJECT_NAME})
 install(DIRECTORY include/ DESTINATION include)
 install(DIRECTORY src/ DESTINATION src)
