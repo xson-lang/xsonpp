@@ -5,11 +5,11 @@
 #include <filesystem>
 
 #include "error_location.hpp"
-#include "../xson/ext_list.hpp"
-#include "../xson/segment.hpp"
-#include "../result/result.hpp"
-#include "../result/error.hpp"
-#include "../xson/value/array.hpp"
+#include "xsonpp/xson/ext_list.hpp"
+#include "xsonpp/xson/segment.hpp"
+#include "xsonpp/result/result.hpp"
+#include "xsonpp/result/error.hpp"
+#include "xsonpp/xson/value/array.hpp"
 
 
 namespace xson {

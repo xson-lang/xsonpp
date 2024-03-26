@@ -5,7 +5,7 @@
 
 #include "value/array.hpp"
 #include "ext_list.hpp"
-#include "../result/result.hpp"
+#include "xsonpp/result/result.hpp"
 
 #define COMMA ,
 #define XSONPP_SEGMENTS_NON_CONTENT \

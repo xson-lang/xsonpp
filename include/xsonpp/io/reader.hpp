@@ -4,8 +4,8 @@
 
 #include <llfio.hpp>
 
-#include "../result/result.hpp"
-#include "../xson/document.hpp"
+#include "xsonpp/result/result.hpp"
+#include "xsonpp/xson/document.hpp"
 
 namespace xson {
 	namespace llfio = LLFIO_V2_NAMESPACE;

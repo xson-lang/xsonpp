@@ -10,7 +10,7 @@
 #include <llfio/v2.0/status_code.hpp>
 
 
-#include "../export_defs.h"
+#include "xsonpp/export_defs.h"
 #include "error_code.hpp"
 
 
@@ -79,7 +79,7 @@ namespace std {
 }
 
 
-#include "../src/error.inl"
+#include "../../../src/error.inl"
 
 #ifdef XSONPP_HEADER_ONLY
 #include "../../../src/error.ipp"
