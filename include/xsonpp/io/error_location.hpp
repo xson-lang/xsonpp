@@ -21,4 +21,4 @@ namespace xson{
 	};
 }
 
-#include "../../../src/error_location.inl"
+#include "../src/xsonpp/result/error_location.inl"

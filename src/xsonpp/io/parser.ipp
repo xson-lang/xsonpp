@@ -2,9 +2,9 @@
 #include "xsonpp/io/parser.hpp"
 
 
-#include "parse/object.ipp"
-#include "parse/directive.ipp"
-#include "parse/comment.ipp"
+#include "parser/object.inl"
+#include "parser/directive.inl"
+#include "parser/comment.inl"
 
 namespace xson {
 	error::info parser::make_parse_error(error::code value, std::optional<error_location> l) const noexcept {

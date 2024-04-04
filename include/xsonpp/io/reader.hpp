@@ -28,5 +28,5 @@ namespace xson {
 }
 
 #ifdef XSONPP_HEADER_ONLY
-#include "../../../src/reader.ipp"
+#include "../src/xsonpp/io/reader.ipp"
 #endif

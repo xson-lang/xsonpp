@@ -79,8 +79,4 @@ namespace std {
 }
 
 
-#include "../../../src/error.inl"
-
-#ifdef XSONPP_HEADER_ONLY
-#include "../../../src/error.ipp"
-#endif
+#include "../src/xsonpp/result/error.inl"

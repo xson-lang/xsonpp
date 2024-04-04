@@ -27,8 +27,8 @@ if(DEFINED XSONPP_HEADER_ONLY)
 else()
     ### static and shared
     set(CPP_FILES
-        src/parser.cpp
-        src/reader.cpp
+        src/xsonpp/cpp/parser.cpp
+        src/xsonpp/cpp/reader.cpp
     )
 
     add_library(${PROJECT_NAME} ${CPP_FILES})

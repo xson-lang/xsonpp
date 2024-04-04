@@ -1,5 +1,5 @@
 #pragma once
-#include "../parser.ipp"
+#include "xsonpp/io/parser.hpp"
 
 #include "xsonpp/xson/directives.hpp"
 #include <string_view>

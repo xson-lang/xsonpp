@@ -45,7 +45,7 @@ namespace xson {
 
 #ifdef XSONPP_HEADER_ONLY
 #define _INLINE_HEADER_ONLY inline
-#include "../../../src/parser.ipp"
+#include "../src/xsonpp/io/parser.ipp"
 #else
 #define _INLINE_HEADER_ONLY
 #endif
