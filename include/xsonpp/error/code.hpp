@@ -2,6 +2,7 @@
 #include <string_view>
 #include <array>
 #include <cstdint>
+#include <system_error>
 
 namespace xson::error {
 	enum code : std::int_fast32_t {
@@ -82,4 +83,8 @@ namespace xson::error {
 
 		"Unexpected/unknown XSON error",
 	};
+}
+
+namespace std {
+	template<> struct is_error_code_enum<xson::error::code> : true_type {};
 }

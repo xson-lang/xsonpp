@@ -3,12 +3,13 @@
 #include <type_traits>
 #include <optional>
 #include <filesystem>
+#include <result.hpp>
 
 #include "error_location.hpp"
 #include "xsonpp/xson/ext_list.hpp"
 #include "xsonpp/xson/segment.hpp"
-#include "xsonpp/result/result.hpp"
-#include "xsonpp/result/error.hpp"
+#include "xsonpp/error/code.hpp"
+#include "xsonpp/error/info.hpp"
 #include "xsonpp/xson/value/array.hpp"
 
 

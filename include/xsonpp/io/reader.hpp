@@ -3,9 +3,11 @@
 #include <cstdint>
 
 #include <llfio.hpp>
+#include <result.hpp>
 
-#include "xsonpp/result/result.hpp"
+#include "xsonpp/error/info.hpp"
 #include "xsonpp/xson/document.hpp"
+#include "xsonpp/export_defs.h"
 
 namespace xson {
 	namespace llfio = LLFIO_V2_NAMESPACE;
@@ -15,8 +17,8 @@ namespace xson {
 		constexpr reader() noexcept = default;
 		//Destructor calls input file handle destructor, which closes the handle
 
-		result<> open(std::filesystem::path file_path) noexcept;
-		result<> close() noexcept;
+		result<void> open(std::filesystem::path file_path) noexcept;
+		result<void> close() noexcept;
 
 		result<document> read(); //needs testing for inner copy elision?
 

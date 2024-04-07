@@ -4,7 +4,7 @@
 #include <cstring>
 #include <string_view>
 
-#include "xsonpp/result/error_code.hpp"
+#include "xsonpp/error/code.hpp"
 #include "xsonpp/xson/segment.hpp"
 #include "xsonpp/xson/value/object.hpp"
 

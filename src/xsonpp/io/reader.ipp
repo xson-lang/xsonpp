@@ -5,6 +5,9 @@
 
 #include <cstring>
 #include <charconv>
+#include <outcome/config.hpp>
+#include <outcome/success_failure.hpp>
+#include <utility>
 
 
 #define VERIFY_RESULT_UNSCOPED(var, fn) \
@@ -14,7 +17,7 @@ if (var.has_error()) \
 
 
 namespace xson {
-	result<> reader::open(std::filesystem::path file_path) noexcept {
+	result<void> reader::open(std::filesystem::path file_path) noexcept {
 		VERIFY_RESULT_UNSCOPED(file_result, llfio::mapped_file({}, file_path));
 		input_handle = std::move(file_result).assume_value(); //!!!! Needs Testing !!!!
 
@@ -22,14 +25,14 @@ namespace xson {
 		input_length = file_len.assume_value();
 
 		file_loc = file_path;
-
-		return impl::success();
+		
+		return OUTCOME_V2_NAMESPACE::success_type<void>{};
 	}
 
-	result<> reader::close() noexcept {
+	result<void> reader::close() noexcept {
 		if (auto r = input_handle.close(); r.has_error()) \
 			return r.assume_error();
-		return impl::success();
+		return result<void>{std::in_place_type<void>};
 	}
 
 	result<document> reader::read() {
@@ -45,7 +48,7 @@ namespace xson {
 
 		parser p{ext_list{true << 0}, {1, 1, file_loc}};
 		auto r = p.parse<segment::object>(begin, input_length);
-		if(r.has_error())
+		if(!r.has_value())
 			return r.error();
 		return document{*r};
 	}

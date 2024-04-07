@@ -73,7 +73,7 @@ endif()
 ### include directory ###
 cmake_path(SET SELF_INC_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 file(TO_NATIVE_PATH "${SELF_INC_CMAKE_DIR}" SELF_INC_DIR)
-target_include_directories(${PROJECT_NAME} INTERFACE "${SELF_INC_DIR}")
+target_include_directories(${PROJECT_NAME} BEFORE PUBLIC "${SELF_INC_DIR}")
 message(STATUS "Including self directory: ${SELF_INC_DIR}")
 
 

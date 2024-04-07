@@ -1,17 +1,15 @@
 #pragma once
-#include <array>
-#include <llfio/v2.0/path_view.hpp>
-#include <system_error>
-#include <filesystem>
 #include <optional>
+
+#include <result.hpp>
+#include <llfio/v2.0/path_view.hpp>
 
 //required to build shared library: disable use of undefined function that checks filesytem abi
 #define LLFIO_DISABLE_INLINE_SIZEOF_FILESYSTEM_PATH_CHECK 1
 #include <llfio/v2.0/status_code.hpp>
 
 
-#include "xsonpp/export_defs.h"
-#include "error_code.hpp"
+#include "xsonpp/error/code.hpp"
 
 
 namespace xson::error {
@@ -55,28 +53,9 @@ namespace xson::error {
 	};
 }
 
-
-
-namespace xson::error {
-	struct category : public std::error_category {
-		virtual inline const char* name() const noexcept override final;
-		virtual inline std::string message(int c) const override final;
-		virtual inline std::error_condition default_error_condition(int c) const noexcept override final;
-	};
+namespace xson {
+	template<typename T>
+	using result = ol::result<T, xson::error::info>;
 }
 
-
-namespace xson::error {
-	inline const category& xson_category() noexcept;
-
-	inline std::error_code make_error_code(error::code e);
-	inline std::error_code make_error_code(error::info e);
-}
-
-
-namespace std {
-	template<> struct is_error_code_enum<xson::error::code> : true_type {};
-}
-
-
-#include "../src/xsonpp/result/error.inl"
+#include "../src/xsonpp/error/info.inl"

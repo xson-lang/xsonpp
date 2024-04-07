@@ -1,11 +1,10 @@
 #pragma once
 #include <cstdint>
 #include <type_traits>
-#include <utility>
+#include <result.hpp>
 
-#include "value/array.hpp"
-#include "ext_list.hpp"
-#include "xsonpp/result/result.hpp"
+#include "xsonpp/error/info.hpp"
+#include "xsonpp/xson/value/array.hpp"
 
 #define COMMA ,
 #define XSONPP_SEGMENTS_NON_CONTENT \
