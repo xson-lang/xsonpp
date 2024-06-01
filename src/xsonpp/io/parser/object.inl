@@ -1,8 +1,11 @@
 #pragma once
 #include "xsonpp/io/parser.hpp"
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <string_view>
+#include <type_traits>
+#include <zsimd/arch/scalar.hpp>
 
 #include "xsonpp/error/code.hpp"
 #include "xsonpp/xson/segment.hpp"
@@ -13,105 +16,42 @@ if (auto r = fn; r.has_error()) \
 	return r.assume_error();
 
 #define VERIFY_CMP(cmp) \
-if(all_zeros(cmp)) goto next_block
+if(simd::is_all_zeros(cmp)) goto next_block
 
 
 namespace xson {
     template<> 
 	result<object> parser::parse<segment::object>(const char_type* const char_ptr, std::size_t length) noexcept {
+		using simd = zsimd::scalar;
+		using vector = simd::vector<char_type>;
+		using mask = simd::mask<char_type>;
+
 		if(!char_ptr || length == 0) return object{};
+		//if(length % vector::data_size != 0)
 		object ret;
-		
-
-		/******* using scalar vectorization as a placeholder until actual SIMD is implemented ******/
-		using vector = std::uint64_t;
-		using mask = std::uint8_t;
-		constexpr static std::size_t N = sizeof(vector); //size of vector in bytes (i.e. bytes per vector)
 
 
-		//create broadcasted vectors for each delimiter
-		constexpr static auto bc = [](char c) noexcept -> vector { return c * 0x01'01'01'01'01'01'01'01; };
-		enum delim {
+		enum delim : char_type {
 			zero = '\0', separator = ':', newline = '\n', 
 			obj_open = '{', obj_close = '}', arr_open = '[', arr_close = ']', 
 			comment = '/', comment_ml = '*', directive = '#',
 			tab = '\t', space = ' ', cr = '\r'
 		};
 
-
-		/** placeholder simd functions **/
-		constexpr static auto loadu = [](const char_type* const data) noexcept -> vector {
-			vector ret = 0;
-			//can't use memcpy because of endianness
-			for(std::size_t i = 0; i < N; ++i)
-				ret |= static_cast<vector>(data[i]) << (8 * (N - i - 1));
-			return ret;
-		};
-		constexpr static auto padded_load = [](const char_type* const data, std::size_t len, std::size_t i) noexcept -> vector {
-			bool near_end = len - N < i; 
-			vector ret = loadu(&data[near_end ? len - N : i]);
-			if(near_end) ret <<= ((i - (len - N)) * sizeof(char_type));
-			return ret;
+		constexpr static auto eq_whitespace = [](vector v) noexcept -> vector {
+			return 
+				simd::eq(v, simd::broadcast<char_type>(space)) | 
+				simd::eq(v, simd::broadcast<char_type>(tab)) | 
+				simd::eq(v, simd::broadcast<char_type>(cr)) |  
+				simd::eq(v, simd::broadcast<char_type>(newline)) |  
+				simd::eq(v, simd::broadcast<char_type>(zero));
 		};
 
-		constexpr static auto cmpeq_8 = [](vector a, delim bc_idx) noexcept -> vector { 
-			vector result = a ^ bc(bc_idx);
-			vector ret = 0;
-			for (std::size_t i = 0; i < N; ++i) {
-				const std::size_t shift_amt = 8 * (N - i - 1);
-				char_type byte = (result >> shift_amt) & 0xFF;
-				ret |= static_cast<vector>(!byte * 0xFF) << shift_amt;
-			}
-			return ret; 
-		};
-		constexpr static auto move_mask = [](vector v) noexcept -> mask {
-			mask result = 0;
-			for (std::size_t i = 0; i < N; ++i)
-				result |= (((v >> (8 * (N - i - 1))) & 0b1000'0000) >> 7) << (N - i - 1);
-			return result;
-		};
-
-		constexpr static auto rmask = [](std::size_t idx) noexcept -> mask {
-			return static_cast<mask>(-1) >> idx;
-		};
-		constexpr static auto lmask = [](std::size_t idx) noexcept -> mask {
-			return static_cast<mask>(-1) << ((sizeof(mask) * 8) - (idx + 1));
-		};
-
-		constexpr static auto all_zeros = [](mask m) noexcept -> bool {
-			return m == 0;
-		};
-		constexpr static auto all_ones = [](mask m) noexcept -> bool {
-			return m == static_cast<mask>(-1);
-		};
-
-		constexpr static auto countl_zeros = [](mask m) noexcept -> std::size_t {
-			for (std::size_t i = 0; i < N; ++i) 
-				if(m & (1 << (N - i - 1))) 
-					return i;
-			return N; 
-		};
-		constexpr static auto countl_ones = [](mask m) noexcept -> std::size_t {
-			//std::cout << v << std::endl;
-			for (std::size_t i = 0; i < N; ++i) 
-				if(~m & (1 << (N - i - 1))) 
-					return i;
-			return N; 
-		};
-		constexpr static auto countr_ones = [](mask m) noexcept -> std::size_t {
-			for (std::size_t i = 0; i < N; ++i) 
-				if(~m & (1 << i)) 
-					return i;
-			return N; 
-		};
-
-		constexpr static auto cmpeq_whitespace = [](vector v) noexcept -> vector {
-			return cmpeq_8(v, space) | cmpeq_8(v, tab) | cmpeq_8(v, cr) | cmpeq_8(v, newline) | cmpeq_8(v, zero);
-		};
+		//constexpr static vector oog = eq_whitespace(simd::loadu("01\t\r\n 12"));
+		//constexpr static char yog = simd::to_mask(oog);
 
 		///*first phase: strip comments (EXT 1)
 		/*** WIP - see comment.ipp ***/
-		
 		std::size_t i = 0;
 		//second phase: parse directives (must be at top of file)
 		/*{
@@ -160,19 +100,20 @@ namespace xson {
 		};
 
 		
-
-		for(std::size_t block_idx = 0; i < length; i += N, block_idx = 0) {
-			//load N bytes (or whatever remains if less than N bytes are left) into the block;
-			vector block = padded_load(char_ptr, length, i);
-			mask whitespace_mask = move_mask(cmpeq_whitespace(block));
+		vector block;
+		for(std::size_t block_idx = 0; i < length; i += vector::slots, block_idx = 0) {
+			block = (i + vector::slots) <= length ? 
+				simd::loadu(&char_ptr[i]) : 
+				simd::ploadu(&char_ptr[i], length - i); 
+			mask whitespace_mask = simd::to_mask(eq_whitespace(block));
 
 		parse_nonws:
 			switch(mode) {
 			find_next_nonws:
 			default: {
-				mask ignore_mask = whitespace_mask | lmask(block_idx);
-				if(all_ones(ignore_mask)) continue;
-				block_idx = countl_ones(ignore_mask);
+				mask ignore_mask = whitespace_mask | simd::left_mask<char_type>(block_idx);
+				if(simd::is_ones(ignore_mask)) continue;
+				block_idx = simd::countl_one(ignore_mask);
 				begin_idx = i + block_idx;
 
 
@@ -182,6 +123,7 @@ namespace xson {
 
 				case obj_open:
 					obj_depth = 1;
+					++block_idx;
 					[[fallthrough]];
 				case arr_open:
 					mode = static_cast<parse_mode>(char_ptr[begin_idx]);
@@ -198,20 +140,20 @@ namespace xson {
 			case str: {
 				//get the index of the first delimiter (a newline if we're in a value; a colon if not) in the current block
 				bool in_value = !key_str.empty();
-				mask delim_mask = move_mask(cmpeq_8(block, in_value ? newline : separator)) & rmask(block_idx);
+				mask delim_mask = simd::to_mask(simd::eq(block, simd::broadcast<char_type>(in_value ? newline : separator))) & simd::right_mask<char_type>(block_idx);
 
 				//if such a delimier exists, then mask it out of the block (i.e. consider it whitespace) as it should not be included in the current key/value
 				mask ignore_mask = whitespace_mask;
-				if(!all_zeros(delim_mask)) ignore_mask |= rmask(countl_zeros(delim_mask));
+				if(!simd::is_zeros(delim_mask)) ignore_mask |= simd::right_mask<char_type>(simd::countl_zero(delim_mask));
 
 				//get the index of the last non-whitespace character
 				//if such a character exists in the current block, then set the length of the key/value string based on it's index
-				if(!all_ones(ignore_mask)) end_idx = i + N - 1 - countr_ones(ignore_mask);
+				if(!simd::is_ones(ignore_mask)) end_idx = i + vector::native_size - 1 - simd::countr_one(ignore_mask);
 
 				//move to the first ending delimiter. If there is none (tblock_maskhere are 8 zeros, so i is already set to the next block), then continue the next block
-				if(all_zeros(delim_mask)) continue;
+				if(simd::is_zeros(delim_mask)) continue;
 
-				block_idx = countl_zeros(delim_mask);
+				block_idx = simd::countl_zero(delim_mask);
 
 				//if we're on a key, then set the key string to our current beginning and length
 				if(!in_value) 
@@ -227,13 +169,13 @@ namespace xson {
 
 			case array: {  
 				//find the first array closing character. 
-				mask arr_close_mask = move_mask(cmpeq_8(block, arr_close));
+				mask arr_close_mask = simd::to_mask(simd::eq(block, simd::broadcast<char_type>(arr_close)));
 				//If there is none (i.e. the compare vector is all zeros), then continue the next block
-				if(all_zeros(arr_close_mask)) continue;
+				if(simd::is_zeros(arr_close_mask)) continue;
 				
 				//move to the first array closing character
 
-				block_idx = countl_zeros(arr_close_mask);
+				block_idx = simd::countl_zero(arr_close_mask);
 				end_idx = i + block_idx;
 				
 				add_kv();
@@ -244,13 +186,15 @@ namespace xson {
 				}
 			
 			case object: {
+				//" {}{{}} "
+				//constexpr static mask o = simd::to_mask(simd::eq(simd::loadu(" {}{{ }}"), simd::broadcast<char_type>(obj_open ))) & simd::right_mask<char_type>(1);
 				//find the index of the first closing and opening object character
-				mask open_mask  = move_mask(cmpeq_8(block, obj_open )) & rmask(block_idx + 1);
-				mask close_mask = move_mask(cmpeq_8(block, obj_close)) & rmask(block_idx + 1);
+				mask open_mask  = simd::to_mask(simd::eq(block, simd::broadcast<char_type>(obj_open ))) & simd::right_mask<char_type>(block_idx);
+				mask close_mask = simd::to_mask(simd::eq(block, simd::broadcast<char_type>(obj_close))) & simd::right_mask<char_type>(block_idx);
 
-				for(mask block_mask = open_mask | close_mask; !all_zeros(block_mask); block_mask &= rmask(block_idx + 1)) {
-					block_idx = countl_zeros(block_mask);
-					obj_depth += (close_mask & (1 << (N - 1 - block_idx))) ? -1 : 1;
+				for(mask block_mask = open_mask | close_mask; !simd::is_zeros(block_mask); block_mask &= simd::right_mask<char_type>(block_idx + 1)) {
+					block_idx = simd::countl_zero(block_mask);
+					obj_depth += (close_mask & (1 << (vector::native_size - 1 - block_idx))) ? -1 : 1;
 					if(obj_depth == 0) {
 						end_idx = i + block_idx;
 						add_kv();
