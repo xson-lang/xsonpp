@@ -20,7 +20,8 @@ namespace xson {
 		result<void> open(std::filesystem::path file_path) noexcept;
 		result<void> close() noexcept;
 
-		result<document> read(); //needs testing for inner copy elision?
+		//template<template<typename...> typename KVMapTy = std::map>
+		result<document<>> read();
 
 	private:
 		llfio::mapped_file_handle input_handle{};

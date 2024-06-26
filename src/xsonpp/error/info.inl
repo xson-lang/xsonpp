@@ -27,8 +27,8 @@ namespace xson::error {
 
 
 namespace xson::error {
-	info::info() :
-		info(error::unknown) {}
+	constexpr info::info() :
+		_code(code::unknown), _cat(nullptr), _path(), _line(0), _col(0) {}
 
 	info::info(llfio_err& llfio_error) : 
 		_code(static_cast<error::code>(llfio_error.value())), 
@@ -41,7 +41,11 @@ namespace xson::error {
 		_code(value), _cat(&error::xson_category()), _path(file_path),
 		_line(file_line.value_or(npos)),
 		_col(file_column.value_or(npos)) {}
-
+		
+	info::info(std::errc value, llfio::path_view file_path,
+		std::optional<std::size_t> file_line, std::optional<std::size_t> file_column
+	) : 
+		info(static_cast<error::code>(value), file_path, file_line, file_column) {};
 
 	constexpr llfio::path_view info::path() const noexcept {
 		return _path;

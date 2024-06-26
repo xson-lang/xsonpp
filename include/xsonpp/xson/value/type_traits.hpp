@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <string>
 
-namespace xson { struct object; }
+namespace xson { template<template<typename...> typename> struct object; }
 
 
 namespace xson::impl {
@@ -77,6 +77,16 @@ namespace xson::impl {
 
 	template<class T>
 	constexpr bool has_subscript_operator_v = has_subscript_operator<T>::value;
+
+
+	template<class T, typename ContainedT, typename = void>
+	struct has_emplace_back : std::false_type {};
+
+	template<class T, typename ContainedT>
+	struct has_emplace_back<T, ContainedT, std::void_t<decltype(std::declval<T>().emplace_back(std::declval<ContainedT>()))>> : std::true_type {};
+
+	template<class T, typename ContainedT>
+	constexpr bool has_emplace_back_v = has_emplace_back<T, ContainedT>::value;
 }
 
 namespace xson::impl {
@@ -89,13 +99,13 @@ namespace xson::impl {
 
 
 namespace xson::impl {
-	template<class T>
+	template<class T, template<typename...> class KVMapTy>
 	using is_not_specialized = std::conjunction<
 		std::negation<is_array_like<T>>, 
 		std::negation<std::is_arithmetic<remove_cvref_t<T>>>,
-		std::negation<std::is_convertible<T, xson::object>>
+		std::negation<std::is_convertible<T, xson::object<KVMapTy>>>
 	>;
 
-	template<class T>
-	constexpr bool is_not_specialized_v = is_not_specialized<T>::value;
+	template<class T, template<typename...> class KVMapTy>
+	constexpr bool is_not_specialized_v = is_not_specialized<T, KVMapTy>::value;
 }

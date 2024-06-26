@@ -32,12 +32,20 @@ namespace xson::error {
 		return c;
 	}
 
+
 	std::error_code make_error_code(error::code e)  {
 		return { static_cast<int>(e), category() };
 	}
 
-
 	std::error_code make_error_code(error::info e) {
 		return make_error_code(e.code());
+	}
+
+	std::error_condition make_error_condition(error::code e) {
+		return {static_cast<int>(e), category()};
+	}
+
+	std::error_condition make_error_condition(error::info e) {
+		return make_error_condition(e.code());
 	}
 }

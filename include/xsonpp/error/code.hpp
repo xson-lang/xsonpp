@@ -40,6 +40,9 @@ namespace xson::error {
 		missing_ext_id,
 		invalid_ext_id,
 		invalid_ext_range,
+		
+		//Key-value parse errors
+		key_not_found,
 
 		num_codes,
 
@@ -50,7 +53,7 @@ namespace xson::error {
 
 	//TODO add parameter to descriptions (%s)
 	constexpr std::array<std::string_view, num_codes> desc = {
-		"Success! (No error)",
+		"<No Error>",
 
 		"Operation is not permitted! The process or user may not have the necessary permissions to perform the operation.",
 		"File or directory doesn't exist!",
@@ -87,4 +90,5 @@ namespace xson::error {
 
 namespace std {
 	template<> struct is_error_code_enum<xson::error::code> : true_type {};
+	template<> struct is_error_condition_enum<xson::error::code> : true_type {};
 }

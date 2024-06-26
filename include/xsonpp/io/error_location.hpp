@@ -1,14 +1,11 @@
 #pragma once
 #include <cstddef>
-#include <cstdint>
-#include <llfio.hpp>
+#include <string_view>
 
 namespace xson{
-	using path_view = LLFIO_V2_NAMESPACE::path_view;
-
 	struct error_location {
 		std::size_t line = 1, col = 1;
-		path_view file = {};
+		std::string_view file = {};
         
 		constexpr void next_line() noexcept;
 		constexpr void next(char curr_char) noexcept;

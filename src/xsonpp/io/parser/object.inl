@@ -20,15 +20,16 @@ if(simd::is_all_zeros(cmp)) goto next_block
 
 
 namespace xson {
-    template<> 
-	result<object> parser::parse<segment::object>(const char_type* const char_ptr, std::size_t length) noexcept {
+	template<template<typename...> class KVMapTy> 
+	result<KVMapTy<string, string>> parser::parse(const parser::char_type* const char_ptr, std::size_t length) noexcept {
 		using simd = zsimd::scalar;
 		using vector = simd::vector<char_type>;
 		using mask = simd::mask<char_type>;
+		using map_type = KVMapTy<string, string>;
 
-		if(!char_ptr || length == 0) return object{};
+		if(!char_ptr || length == 0) return map_type{};
 		//if(length % vector::data_size != 0)
-		object ret;
+		map_type ret;
 
 
 		enum delim : char_type {
@@ -91,7 +92,7 @@ namespace xson {
 
 		auto add_kv = [&key_str, &begin_idx, &end_idx, &ret, char_ptr]() noexcept {
 			//try to add the key/value pair. Return whether the key already exists or not.
-			const bool exists = !ret.kv_pairs.emplace(
+			const bool exists = !ret.emplace(
 				string{ key_str },
 				string(&char_ptr[begin_idx], end_idx - begin_idx + 1)
 			).second;
@@ -111,7 +112,7 @@ namespace xson {
 			switch(mode) {
 			find_next_nonws:
 			default: {
-				mask ignore_mask = whitespace_mask | simd::left_mask<char_type>(block_idx);
+				mask ignore_mask = whitespace_mask | simd::left_mask<false, char_type>(block_idx); //!!!!!!!
 				if(simd::is_ones(ignore_mask)) continue;
 				block_idx = simd::countl_one(ignore_mask);
 				begin_idx = i + block_idx;
@@ -140,20 +141,20 @@ namespace xson {
 			case str: {
 				//get the index of the first delimiter (a newline if we're in a value; a colon if not) in the current block
 				bool in_value = !key_str.empty();
-				mask delim_mask = simd::to_mask(simd::eq(block, simd::broadcast<char_type>(in_value ? newline : separator))) & simd::right_mask<char_type>(block_idx);
+				mask delim_mask = simd::to_mask(simd::eq(block, simd::broadcast<char_type>(in_value ? newline : separator))) & simd::right_mask<true, char_type>(block_idx);
 
 				//if such a delimier exists, then mask it out of the block (i.e. consider it whitespace) as it should not be included in the current key/value
 				mask ignore_mask = whitespace_mask;
-				if(!simd::is_zeros(delim_mask)) ignore_mask |= simd::right_mask<char_type>(simd::countl_zero(delim_mask));
+				if(!simd::is_zeros(delim_mask)) ignore_mask |= simd::right_mask<true, char_type>(simd::countl_zero(delim_mask));
 
 				//get the index of the last non-whitespace character
 				//if such a character exists in the current block, then set the length of the key/value string based on it's index
-				if(!simd::is_ones(ignore_mask)) end_idx = i + vector::native_size - 1 - simd::countr_one(ignore_mask);
+				if(!simd::is_ones(ignore_mask)) end_idx = i + vector::data_size - 1 - simd::countr_one(ignore_mask);
 
-				//move to the first ending delimiter. If there is none (tblock_maskhere are 8 zeros, so i is already set to the next block), then continue the next block
+				//move just past the first ending delimiter. If there is none (tblock_maskhere are 8 zeros, so i is already set to the next block), then continue the next block
 				if(simd::is_zeros(delim_mask)) continue;
 
-				block_idx = simd::countl_zero(delim_mask);
+				block_idx = simd::countl_zero(delim_mask) + 1; //!
 
 				//if we're on a key, then set the key string to our current beginning and length
 				if(!in_value) 
@@ -174,9 +175,10 @@ namespace xson {
 				if(simd::is_zeros(arr_close_mask)) continue;
 				
 				//move to the first array closing character
-
-				block_idx = simd::countl_zero(arr_close_mask);
+				block_idx = simd::countl_zero(arr_close_mask); //!
 				end_idx = i + block_idx;
+				//move just past the first array closing character
+				++block_idx;
 				
 				add_kv();
 
@@ -186,17 +188,16 @@ namespace xson {
 				}
 			
 			case object: {
-				//" {}{{}} "
-				//constexpr static mask o = simd::to_mask(simd::eq(simd::loadu(" {}{{ }}"), simd::broadcast<char_type>(obj_open ))) & simd::right_mask<char_type>(1);
 				//find the index of the first closing and opening object character
-				mask open_mask  = simd::to_mask(simd::eq(block, simd::broadcast<char_type>(obj_open ))) & simd::right_mask<char_type>(block_idx);
-				mask close_mask = simd::to_mask(simd::eq(block, simd::broadcast<char_type>(obj_close))) & simd::right_mask<char_type>(block_idx);
+				mask open_mask  = simd::to_mask(simd::eq(block, simd::broadcast<char_type>(obj_open ))) & simd::right_mask<true, char_type>(block_idx); //??!!
+				mask close_mask = simd::to_mask(simd::eq(block, simd::broadcast<char_type>(obj_close))) & simd::right_mask<true, char_type>(block_idx); //??!!
 
-				for(mask block_mask = open_mask | close_mask; !simd::is_zeros(block_mask); block_mask &= simd::right_mask<char_type>(block_idx + 1)) {
-					block_idx = simd::countl_zero(block_mask);
-					obj_depth += (close_mask & (1 << (vector::native_size - 1 - block_idx))) ? -1 : 1;
+				for(mask block_mask = open_mask | close_mask; !simd::is_zeros(block_mask); block_mask &= simd::right_mask<true, char_type>(block_idx + 1)) {
+					block_idx = simd::countl_zero(block_mask); //!
+					obj_depth += (close_mask & (1 << (vector::data_size - 1 - block_idx))) ? -1 : 1;
 					if(obj_depth == 0) {
 						end_idx = i + block_idx;
+						++block_idx;
 						add_kv();
 						mode = none;
 						goto find_next_nonws;

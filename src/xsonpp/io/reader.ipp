@@ -5,6 +5,7 @@
 
 #include "xsonpp/io/parser.hpp"
 #include "xsonpp/io/reader.hpp"
+#include "xsonpp/xson/document.hpp"
 #include "xsonpp/xson/ext_list.hpp"
 
 #define VERIFY_RESULT_UNSCOPED(var, fn) \
@@ -41,22 +42,23 @@ namespace xson {
 		return result<void>{std::in_place_type<void>};
 	}
 
-	result<document> reader::read() {
+	result<document<>> reader::read() {
 		if (!input_handle.is_valid())
 			return error::info{ error::bad_file_descriptor, file_loc};
 
 		if (input_length == 0)
-			return document{};
+			return document<>{};
 		
 		const char* begin = reinterpret_cast<char*>(input_handle.address());
 		if (!begin || !(begin + input_length))
 			return error::info{ error::resouce_unavailable_try_again, file_loc };
 
-		parser p{ext_list{true << 0}, {1, 1, file_loc}};
-		auto r = p.parse<segment::object>(begin, input_length);
+		constexpr static ext_list default_exts = {true << 0};
+		parser p{default_exts, {1, 1, file_loc.native()}};
+		auto r = p.parse<>(begin, input_length);
 		if(!r.has_value())
 			return r.error();
-		return document{*r};
+		return document<>{default_exts, *r};
 	}
 }
 

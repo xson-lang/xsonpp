@@ -1,6 +1,9 @@
 #pragma once
+#include <map>
+
 #include "value/object.hpp"
 
 namespace xson {
-	using document = object;
+	template<template<typename...> class KVMapTy = std::map> 
+	using document = object<KVMapTy>;
 }

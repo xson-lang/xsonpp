@@ -18,6 +18,9 @@ namespace xson::error {
 
 	inline std::error_code make_error_code(error::code e);
 	inline std::error_code make_error_code(error::info e);
+
+	inline std::error_condition make_error_condition(error::code e);
+	inline std::error_condition make_error_condition(error::info e);
 }
 
 #include "../src/xsonpp/error/category.inl"

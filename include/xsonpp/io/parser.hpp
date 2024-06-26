@@ -1,16 +1,15 @@
 #pragma once
-#include <cstdint>
-#include <type_traits>
+#include <map>
 #include <optional>
-#include <filesystem>
 #include <result.hpp>
+#include <type_traits>
 
 #include "error_location.hpp"
 #include "xsonpp/xson/ext_list.hpp"
 #include "xsonpp/xson/segment.hpp"
 #include "xsonpp/error/code.hpp"
 #include "xsonpp/error/info.hpp"
-#include "xsonpp/xson/value/array.hpp"
+#include "xsonpp/xson/value/string.hpp"
 
 
 namespace xson {
@@ -22,6 +21,9 @@ namespace xson {
 
 		template<segment::category S> 
 		segment::result_type_t<S> parse(const char_type* const char_ptr, std::size_t length) noexcept;
+
+		template<template<typename...> class KVMapTy = std::map> 
+		result<KVMapTy<string, string>> parse(const char_type* const char_ptr, std::size_t length) noexcept;
 
 	private:
 		error::info make_parse_error(error::code value, std::optional<error_location> l = std::nullopt) const noexcept;
@@ -35,13 +37,10 @@ namespace xson {
 
 namespace xson {
 	template<>
-	result<object> parser::parse<segment::object>(const parser::char_type* const char_ptr, std::size_t length) noexcept;
+	segment::result_type_t<segment::comment> parser::parse<segment::comment>(const parser::char_type* const char_ptr, std::size_t length) noexcept;
 
 	template<>
-	result<list> parser::parse<segment::array>(const parser::char_type* const char_ptr, std::size_t length) noexcept;
-
-	template<> 
-	result<std::pair<ext_list, std::size_t>> parser::parse<segment::directive>(const parser::char_type* const char_ptr, std::size_t length) noexcept;
+	segment::result_type_t<segment::directive> parser::parse<segment::directive>(const parser::char_type* const char_ptr, std::size_t length) noexcept;
 }
 
 #ifdef XSONPP_HEADER_ONLY
@@ -50,3 +49,5 @@ namespace xson {
 #else
 #define _INLINE_HEADER_ONLY
 #endif
+
+#include "../src/xsonpp/io/parser/object.inl"
