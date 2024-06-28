@@ -3,6 +3,7 @@
 #include <utility>
 #include <zsimd/arch/scalar.hpp>
 
+#include "xsonpp/error/code.hpp"
 #include "xsonpp/io/parser.hpp"
 #include "xsonpp/io/reader.hpp"
 #include "xsonpp/xson/document.hpp"
@@ -44,14 +45,14 @@ namespace xson {
 
 	result<document<>> reader::read() {
 		if (!input_handle.is_valid())
-			return error::info{ error::bad_file_descriptor, file_loc};
+			return error::info{ error::invalid_file, file_loc};
 
 		if (input_length == 0)
 			return document<>{};
 		
 		const char* begin = reinterpret_cast<char*>(input_handle.address());
 		if (!begin || !(begin + input_length))
-			return error::info{ error::resouce_unavailable_try_again, file_loc };
+			return error::info{ error::cannot_load_file, file_loc };
 
 		constexpr static ext_list default_exts = {true << 0};
 		parser p{default_exts, {1, 1, file_loc.native()}};

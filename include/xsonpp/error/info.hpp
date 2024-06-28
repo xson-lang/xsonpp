@@ -5,6 +5,7 @@
 #include <llfio.hpp>
 
 #include "xsonpp/error/code.hpp"
+#include "xsonpp/error/category.hpp"
 
 #include <outcome/std_result.hpp>
 
@@ -49,15 +50,7 @@ namespace xson::error {
 	};
 }
 
-namespace OUTCOME_V2_NAMESPACE::trait {
-	template<> struct is_error_type<xson::error::info> { constexpr static bool value = true; };
-	template<> struct is_error_type<xson::error::code> { constexpr static bool value = true; };
-
-	template<typename Enum> struct is_error_type_enum<xson::error::info, Enum> { 
-		constexpr static bool value = std::is_error_condition_enum<Enum>::value; 
-	};
-}
-
+OL_RESULT_DECLARE_AS_ERROR_CLASS(xson::error, info, code())
 
 namespace xson {
 	template<typename T>

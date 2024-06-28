@@ -1,29 +1,17 @@
 #pragma once
+#include <result.hpp>
 #include <string_view>
-#include <array>
 #include <cstdint>
-#include <system_error>
 
 namespace xson::error {
 	enum code : std::int_fast32_t {
-		none,
+		unknown,
 
-		//POSIX errors
-		operation_not_permitted,
-		no_such_file_or_directory,
-		no_such_process,
-		interrupted,
-		io_error,
-		no_such_device_or_address,
-		argument_list_too_long,
-		executable_format_error,
-		bad_file_descriptor,
-		no_child_process,
-		resouce_unavailable_try_again,
-		not_enough_memory,
-		permission_denied,
+		//IO errors
+		invalid_file,
+		cannot_load_file,
 
-		//XSON errors
+		//File parse errors
 		duplicate_key,
 		duplicate_kv_seperator,
 		unmatched_opening_curly_braces,
@@ -45,34 +33,17 @@ namespace xson::error {
 		key_not_found,
 
 		num_codes,
-
-		unknown = none,
-		posix_range_start = operation_not_permitted,
-		posix_range_end = permission_denied,
 	};
 
 	//TODO add parameter to descriptions (%s)
-	constexpr std::array<std::string_view, num_codes> desc = {
-		"<No Error>",
-
-		"Operation is not permitted! The process or user may not have the necessary permissions to perform the operation.",
-		"File or directory doesn't exist!",
-		"", "",
-		"Physical read or write error occured!",
-		"Could not find the device respresented by the given file!",
-		"", "",
-		"Bad file descriptor! Cannot read or write a file that isn't open for reading or writing, respectively.",
-		"", "",
-		"Out of memory! Could not allocate more virtual memory for the operation.",
-		"Permission denied! You may need elevated permissions to operate on the given file.",
-
+	constexpr std::string_view desc[num_codes] = {
 		"Duplicate key!",
-		"Duplicate key-value seperator!"
+		"Duplicate key-value seperator!",
 		"Missing closing curly brace for unmatched \'{\' character!",
 		"Missing closing square bracket for unmatched \'[\' character!",
 		"Missing multi-line comment ending (\'*/\')!",
 		"Unrecognized directive!",
-		"Directive not at top of file! There must not be any key/value pairs before directives."
+		"Directive not at top of file! There must not be any key/value pairs before directives.",
 		"Empty directive! An unescaped \'#\' character by itself is not allowed: it must contain a directive.",
 		"Missing directive arguments! Directive must have a non-empty list!",
 		"Missing directive item before comma separator (\',\')! You cannot have a directive list with an empty item!",
@@ -88,7 +59,4 @@ namespace xson::error {
 	};
 }
 
-namespace std {
-	template<> struct is_error_code_enum<xson::error::code> : true_type {};
-	template<> struct is_error_condition_enum<xson::error::code> : true_type {};
-}
+OL_RESULT_DECLARE_AS_ERROR_CODE(xson::error, code, &desc[0], nullptr, xson)
