@@ -1,5 +1,6 @@
 #pragma once
 #include <result.hpp>
+#include <result/basic_error_category.hpp>
 #include <string_view>
 #include <cstdint>
 
@@ -59,4 +60,4 @@ namespace xson::error {
 	};
 }
 
-OL_RESULT_DECLARE_AS_ERROR_CODE(xson::error, code, &desc[0], nullptr, xson)
+OL_RESULT_DECLARE_AS_ERROR_CODE(xson::error, code, &ol::error_category_array<desc>, nullptr, xson)
